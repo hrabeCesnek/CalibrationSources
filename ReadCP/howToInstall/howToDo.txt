@@ -1,0 +1,21 @@
+How to install pico2000a on fresh DietPi v7.0.2
+
+clone repository https://github.com/picotech/picosdk-c-examples
+
+next you need older packages download from
+
+wget https://labs.picotech.com/debian/pool/main/libp/libps2000a/libps2000a_2.1.17-5r1443_armhf.deb
+wget https://labs.picotech.com/debian/pool/main/libp/libpicoipp/libpicoipp_1.1.2-4r56_armhf.deb
+
+or you can find them in this repository
+
+next install them in right order
+
+sudo dpkg -i libpicoipp_1.1.2-4r56_armhf.deb
+
+sudo dpkg -i libps2000a_2.1.17-5r1443_armhf.deb
+
+Now proceed to picosdk examples and follow their instructions, but also you will need to change lines in autogen.sh and possible in C files. You will need to correctly map the lib files you installed,
+for example: 
+
+#include <libps2000a-1.1/ps2000aApi.h> to include <libps2000a/ps2000aApi.h> and etc.
