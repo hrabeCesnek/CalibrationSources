@@ -2629,7 +2629,7 @@ int32_t main(void)
 		{return 0;
 		}
 		
-		status = ps2000aRunBlock((unit.handle),0,maxSamples,timebase,0,NULL,0,NULL,NULL);
+		status = ps2000aRunBlock((unit.handle),50,maxSamples - 50,timebase,0,NULL,0,NULL,NULL);
 		
 		if (status != PICO_OK)
 		{return 0;
@@ -2673,7 +2673,14 @@ int32_t main(void)
 	for (int j = 0; j < retrievedSamples; j++) 
 				{		printf("%.6f\n",(float)buffer[j]/((float)(unit.maxValue)));//((float)(((float)(buffer[j])  * 1) / (float)(unit.maxValue))));
 						//printf("%6d\n",(((buffer[j]  * 1) /unit.maxValue)));		//5 nebo 10?
-						fprintf(fp,"%i %6d\n",timeOfCap,adc_to_mv(buffer[j], 5, &unit));
+						if(j != retrievedSamples-1){
+						fprintf(fp,"%i %.6f\n",timeOfCap,(float)buffer[j]/((float)(unit.maxValue)));
+						}
+						else{
+						fprintf(fp,"%i %.6f",timeOfCap,(float)buffer[j]/((float)(unit.maxValue)));
+
+
+						}
 						timeOfCap = timeOfCap + TimeInterval;
 				}
 				
