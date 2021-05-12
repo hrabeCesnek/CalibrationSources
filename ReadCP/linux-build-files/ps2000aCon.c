@@ -2569,6 +2569,7 @@ int32_t main(void)
 	//unsigned int microsecond = 1000000;
 	//usleep(3 * microsecond);//sleeps for 3 second
 	CloseDevice(&unit);*/
+	int16_t value = 0;
 
 	int32_t retrievedSamples = 0;
 	int16_t * buffer = NULL;
@@ -2578,7 +2579,29 @@ int32_t main(void)
 		if (status != PICO_OK)
 		{return 0;
 		}
-	 status = ps2000aSetChannel((unit.handle),PS2000A_CHANNEL_A,TRUE,PS2000A_DC,PS2000A_5V,0);
+
+	
+	ps2000aMaximumValue(unit.handle, &value);
+	unit.maxValue = value;
+	//printf("%i\n",unit.channelCount);
+	//for (int i = 0; i < unit.channelCount; i++) 
+	//{
+		/*unit.channelSettings[i].enabled = TRUE;
+		unit.channelSettings[i].DCcoupled = FALSE;
+		unit.channelSettings[i].range = PS2000A_1V;*/
+	//}
+
+
+
+
+
+
+
+
+
+
+	
+	 status = ps2000aSetChannel((unit.handle),PS2000A_CHANNEL_A,TRUE,PS2000A_AC,PS2000A_1V,0);
 	 //status = ps2000aSetChannel(unit->handle, (PS2000A_CHANNEL) ch, unit->channelSettings[ch].enabled, (PS2000A_COUPLING) unit->channelSettings[ch].DCcoupled,(PS2000A_RANGE) unit->channelSettings[ch].range, 0);
 	int32_t  TimeInterval, maxSamples;
 	uint32_t timebase = 1;
@@ -2591,6 +2614,7 @@ int32_t main(void)
 		status = ps2000aGetTimebase((unit.handle),timebase,10,&TimeInterval,0,&maxSamples,0);
 		printf("%i\n",maxSamples);
 		printf("%i\n",TimeInterval);
+		
 		if (status == PICO_INVALID_TIMEBASE)
 		{
 			printf("Too many of them");
@@ -2598,22 +2622,29 @@ int32_t main(void)
 		if (status != PICO_OK)
 		{return 0;
 		}
-		status = ps2000aSetSimpleTrigger((unit.handle),0,PS2000A_CHANNEL_A,20,PS2000A_RISING,0,0);
+		printf("%i\n",(int16_t)((unit.maxValue)));
+		printf("%i\n",(int16_t)((0.7 * (float)(unit.maxValue))/1));
+		status = ps2000aSetSimpleTrigger((unit.handle),1,PS2000A_CHANNEL_A,(int16_t)((0.7 * (float)(unit.maxValue))/1),PS2000A_RISING,0,0);
 		if (status != PICO_OK)
 		{return 0;
 		}
 		
 		status = ps2000aRunBlock((unit.handle),0,maxSamples,timebase,0,NULL,0,NULL,NULL);
+		
 		if (status != PICO_OK)
 		{return 0;
 		}
-
+		printf("%i\n",mv_to_adc(300, PS2000A_CHANNEL_A, &unit));
+		printf("%i\n",inputRanges[PS2000A_CHANNEL_A]);
+		printf("%i\n",unit.maxValue);
 		int16_t readyForBattle = 0;
 		uint32_t NoSamples = 200;
+		
 		while(!readyForBattle){
 			status = ps2000aIsReady((unit.handle),&readyForBattle);
 			Sleep(1);
 		}
+		printf("HERE\n\n");
 		buffer = (int16_t*) malloc(NoSamples * sizeof(int16_t));
 		status = ps2000aSetDataBuffer((unit.handle),PS2000A_CHANNEL_A,buffer,NoSamples,0,PS2000A_RATIO_MODE_NONE);
 		if (status != PICO_OK)
@@ -2640,8 +2671,8 @@ int32_t main(void)
    	
 	int32_t timeOfCap = TimeInterval;
 	for (int j = 0; j < retrievedSamples; j++) 
-				{
-						printf("%6d\n", adc_to_mv(buffer[j], 5, &unit));		//5 nebo 10?
+				{		printf("%.6f\n",(float)buffer[j]/((float)(unit.maxValue)));//((float)(((float)(buffer[j])  * 1) / (float)(unit.maxValue))));
+						//printf("%6d\n",(((buffer[j]  * 1) /unit.maxValue)));		//5 nebo 10?
 						fprintf(fp,"%i %6d\n",timeOfCap,adc_to_mv(buffer[j], 5, &unit));
 						timeOfCap = timeOfCap + TimeInterval;
 				}
