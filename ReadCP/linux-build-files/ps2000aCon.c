@@ -2601,7 +2601,7 @@ int32_t main(void)
 
 
 	
-	 status = ps2000aSetChannel((unit.handle),PS2000A_CHANNEL_A,TRUE,PS2000A_AC,PS2000A_1V,0);
+	 status = ps2000aSetChannel((unit.handle),PS2000A_CHANNEL_A,TRUE,PS2000A_DC,PS2000A_20MV,0);
 	 //status = ps2000aSetChannel(unit->handle, (PS2000A_CHANNEL) ch, unit->channelSettings[ch].enabled, (PS2000A_COUPLING) unit->channelSettings[ch].DCcoupled,(PS2000A_RANGE) unit->channelSettings[ch].range, 0);
 	int32_t  TimeInterval, maxSamples;
 	uint32_t timebase = 1;
@@ -2623,8 +2623,8 @@ int32_t main(void)
 		{return 0;
 		}
 		printf("%i\n",(int16_t)((unit.maxValue)));
-		printf("%i\n",(int16_t)((0.7 * (float)(unit.maxValue))/1));
-		status = ps2000aSetSimpleTrigger((unit.handle),1,PS2000A_CHANNEL_A,(int16_t)((0.7 * (float)(unit.maxValue))/1),PS2000A_RISING,0,0);
+		printf("%i\n",(int16_t)((-0.007 * (float)(unit.maxValue))/0.02));
+		status = ps2000aSetSimpleTrigger((unit.handle),1,PS2000A_CHANNEL_A,(int16_t)((-0.007 * (float)(unit.maxValue))/0.02),PS2000A_FALLING,0,0);
 		if (status != PICO_OK)
 		{return 0;
 		}
@@ -2638,7 +2638,7 @@ int32_t main(void)
 		printf("%i\n",inputRanges[PS2000A_CHANNEL_A]);
 		printf("%i\n",unit.maxValue);
 		int16_t readyForBattle = 0;
-		uint32_t NoSamples = 200;
+		uint32_t NoSamples = 20000;
 		
 		while(!readyForBattle){
 			status = ps2000aIsReady((unit.handle),&readyForBattle);
@@ -2671,13 +2671,13 @@ int32_t main(void)
    	
 	int32_t timeOfCap = TimeInterval;
 	for (int j = 0; j < retrievedSamples; j++) 
-				{		printf("%.6f\n",(float)buffer[j]/((float)(unit.maxValue)));//((float)(((float)(buffer[j])  * 1) / (float)(unit.maxValue))));
+				{		printf("%.6f\n",(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));//((float)(((float)(buffer[j])  * 1) / (float)(unit.maxValue))));
 						//printf("%6d\n",(((buffer[j]  * 1) /unit.maxValue)));		//5 nebo 10?
 						if(j != retrievedSamples-1){
-						fprintf(fp,"%i %.6f\n",timeOfCap,(float)buffer[j]/((float)(unit.maxValue)));
+						fprintf(fp,"%i %.6f\n",timeOfCap,(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));
 						}
 						else{
-						fprintf(fp,"%i %.6f",timeOfCap,(float)buffer[j]/((float)(unit.maxValue)));
+						fprintf(fp,"%i %.6f",timeOfCap,(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));
 
 
 						}
