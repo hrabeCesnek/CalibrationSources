@@ -1,0 +1,16 @@
+zarizeni.py 
+- lib pro PC
+- volajici lib pyboard.py
+
+ovlhw.py
+- nahrano v STM
+- lib z funkcemi pro konkretni periferie (DA, AD, PWM)
+- potrebuje uPID.py v STM (knihovna pocitajici PID)
+
+ovlhw411.py pro nucleo f411
+
+
+pres zarizeni.pyf429.prikaz() se da dostat na cokoli v upy.
+treba zmena Kp zarizeni.pyf429.prikaz('ovlhw.pid.Kp=1')
+
+zarizeni.pyf411 nucleo f411
