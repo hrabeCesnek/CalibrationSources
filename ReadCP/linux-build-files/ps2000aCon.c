@@ -2657,13 +2657,27 @@ int32_t main(void)
 	ps2000aStop((unit.handle));
 	ps2000aCloseUnit((unit.handle));
 	printf("%i\n",retrievedSamples);
-	//printf("%i\n",PS2000A_RANGE);
-	
-	printf("%lu\n", (unsigned long)time(NULL)); 
 	unsigned char arr[32];
+	unsigned char dates[32];
+	const char* path = "../../AllData/osci_";
+	const char* extension = ".csv";
+	//printf("%i\n",PS2000A_RANGE);
+	time_t rawtime;
 
+	time (&rawtime);
+	struct tm  *timeinfo = gmtime (&rawtime);
+	strftime(dates, sizeof(dates)-1, "%Y%m%d_%H%M", timeinfo);
+	//    %d.%m.%y_%H:%M:%S"
 
-	snprintf(arr, sizeof(char) * 32, "./data/%lu.txt",(unsigned long)time(NULL));
+	strcpy(arr, path);
+	strcat(arr, dates);
+	strcat(arr, extension);
+
+	//printf();
+	//printf("%lu\n", (unsigned long)time(NULL)); 
+	
+
+	//snprintf(arr, sizeof(char) * 32, "../../AllData/%lu.csv",(unsigned long)time(NULL));
 
 	FILE *fp;
 
@@ -2674,10 +2688,10 @@ int32_t main(void)
 				{		printf("%.6f\n",(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));//((float)(((float)(buffer[j])  * 1) / (float)(unit.maxValue))));
 						//printf("%6d\n",(((buffer[j]  * 1) /unit.maxValue)));		//5 nebo 10?
 						if(j != retrievedSamples-1){
-						fprintf(fp,"%i %.6f\n",timeOfCap,(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));
+						fprintf(fp,"%i,\t %.6f\n",timeOfCap,(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));
 						}
 						else{
-						fprintf(fp,"%i %.6f",timeOfCap,(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));
+						fprintf(fp,"%i,\t %.6f",timeOfCap,(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));
 
 
 						}

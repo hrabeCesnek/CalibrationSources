@@ -11,6 +11,9 @@ sudo -H pip3 install pyvisa pyvisa-py ThorlabsPM100 pyusb
 sudo apt install python3-tk
 """
 
+import sys
+sys.path.append("./blikac/blikac") 
+
 from ThorlabsPM100 import ThorlabsPM100, USBTMC
 import matplotlib.pyplot as plt
 from time import sleep
@@ -18,6 +21,11 @@ from datetime import datetime
 import os
 import glob
 import time
+
+from zarizeni import pyf429
+
+
+
 
 # PM init -- needs RW rights set for the device
 inst = USBTMC(device="/dev/usbtmc0")
@@ -29,6 +37,9 @@ power_meter.sense.correction.wavelength = 380
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
+
+#diode temp init
+#led = pyf429(dev='/dev/ttyACM0')
 
 def read_temp_raw():
     f = open(device_file, 'r')
@@ -53,18 +64,20 @@ def read_temp():
 
 
 
-filename = datetime.utcnow().strftime("read_%Y%m%d_%H%M.csv")
+filename = datetime.utcnow().strftime("../AllData/read_%Y%m%d_%H%M.csv")
 with open(filename,"a") as file:
     file.write("# Thorlabs Power Meter measurement log\n")
     file.write("# Preset wavelength: "+str(power_meter.sense.correction.wavelength))
     file.write("\n######################################\n")
-    file.write("# Date and time,\tPM value [W],\t PMT Temp [°] \n")
+    file.write("# Date and time,\tPM value [W],\t PMT temp [°],\t led temp [°] \n")
 
 for i in range(30): 
     time = datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S")
     meas = power_meter.read
     temp = read_temp()
+    #led_temp = led.teplota()
+    led_temp = -300
     with open(filename,"a") as file:
-        file.write(time+",\t"+str(meas)+",\t" + str(temp) +"\n")
-    print(time+": "+str(meas))
+        file.write(time+",\t"+str(meas)+",\t" + str(temp) + ",\t" + str(led_temp) + "\n")
+    print(time+" PM value"+str(meas) + " PMT temp:"+str(temp) + " led temp:" + str(led_temp))
     sleep(1)
