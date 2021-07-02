@@ -2684,8 +2684,9 @@ int32_t main(void)
    	fp = fopen(arr, "w+");
    	
 	int32_t timeOfCap = TimeInterval;
+	fprintf(fp,"time [nanoSec],\t voltage[mV] \n");
 	for (int j = 0; j < retrievedSamples; j++) 
-				{		printf("%.6f\n",(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));//((float)(((float)(buffer[j])  * 1) / (float)(unit.maxValue))));
+				{		//printf("%.6f\n",(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));//((float)(((float)(buffer[j])  * 1) / (float)(unit.maxValue))));
 						//printf("%6d\n",(((buffer[j]  * 1) /unit.maxValue)));		//5 nebo 10?
 						if(j != retrievedSamples-1){
 						fprintf(fp,"%i,\t %.6f\n",timeOfCap,(float)buffer[j]*((float)(0.02)/((float)(unit.maxValue))));
