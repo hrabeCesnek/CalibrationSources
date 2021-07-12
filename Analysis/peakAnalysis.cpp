@@ -13,7 +13,7 @@
 using namespace std;
 
 
-#define no_deriv 2
+#define no_deriv 3
 
 
 
@@ -108,25 +108,35 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
     if(actual_voltage > Down_bound && actual_voltage < Up_bound){
 
 
-      actual_voltage_2 = actual_voltage;                //check for positive derivative
+                      //check for positive derivative
       d_no_pos = 0;
-      while((actual_voltage_2 - old_voltage) >= 0){
-        if (!(actual_voltage_2 > Down_bound && actual_voltage_2 < Up_bound)){
-          d_no_pos = 0;
-          break;
-        }
-        old_voltage = actual_voltage_2;
-        d_no_pos++;
-        actual_voltage_2 = voltages.at(i+d_no_pos);
-        if(d_no_pos > no_deriv){
-          break;
+      //old_voltage = 0;
+      if (actual_voltage < (0.5 *Vmaximum)) {
 
+
+        actual_voltage_2 = actual_voltage;
+        old_voltage = actual_voltage_2;
+        while((actual_voltage_2 - old_voltage) >= 0){
+          if (!(actual_voltage_2 > Down_bound && actual_voltage_2 < Up_bound)){
+            d_no_pos = 0;
+            break;
+          }
+          old_voltage = actual_voltage_2;
+          d_no_pos++;
+          actual_voltage_2 = voltages.at(i+d_no_pos);
+          if(d_no_pos > no_deriv){
+            break;
+
+          }
         }
       }
-
-      actual_voltage_2 = actual_voltage;                //check for negative derivative
+      //old_voltage = 0;
+              //check for negative derivative
       d_no_neg = 0;
-      while((actual_voltage_2 - old_voltage) < 0){
+      if (actual_voltage > (0.5 *Vmaximum)) {
+      actual_voltage_2 = actual_voltage;
+      old_voltage = actual_voltage_2;
+      while((actual_voltage_2 - old_voltage) <= 0){
         if (!(actual_voltage_2 > Down_bound && actual_voltage_2 < Up_bound)){
           d_no_neg = 0;
           break;
@@ -139,11 +149,11 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
 
         }
       }
-
+    }
       Int_t j = 0;
       if(d_no_pos > no_deriv){
 
-        cout << "new series" << endl;
+        cout << "new positive series" << endl;
 
         temp_times.clear();
         temp_voltages.clear();
@@ -166,14 +176,19 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
 
       else if(d_no_neg > no_deriv){
 
+        cout << "new negative series" << endl;
+
         temp_times.clear();
         temp_voltages.clear();
         //actual_voltage_2 = 0;*******
         actual_voltage_2 = voltages.at(i);
+
+
         while(actual_voltage_2 > Down_bound){
 
         temp_voltages.push_back(actual_voltage_2);
         temp_times.push_back(times.at(i+j));
+        cout << actual_voltage_2 << endl;
 
 
         j++;
