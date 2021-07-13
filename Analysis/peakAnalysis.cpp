@@ -5,7 +5,7 @@
 #include "TLine.h"
 //#include "TTree.h"
 #include <TCanvas.h>
-
+#include "TMultiGraph.h"
 #include <iostream>
 #include <fstream>
 #include <numeric>
@@ -94,7 +94,7 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
   vector<vector<Float_t>> rising_times; //= new vector<int>;
   vector<vector<Float_t>>  rising_voltages;//= new vector<double>;
   vector<vector<Float_t>> falling_times; //= new vector<int>;
-  vector<vector<Float_t>>  falling__voltages;//= new vector<double>;
+  vector<vector<Float_t>>  falling_voltages;//= new vector<double>;
 
   vector<Float_t> temp_times;
   vector<Float_t> temp_voltages;
@@ -195,7 +195,7 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
         actual_voltage_2 = voltages.at(i+j);
         }
         falling_times.push_back(temp_times);
-        falling__voltages.push_back(temp_voltages);
+        falling_voltages.push_back(temp_voltages);
 
 
       }
@@ -218,8 +218,24 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
   }
   }
 
+
+  c1->SaveAs("PWM.png");
+  TCanvas *c2 = new TCanvas("c2","fits", 600,600);
+  TMultiGraph *mg = new TMultiGraph();
+  //TF1 *f1 = new TF1("f1","[0]*x+[1])");
+  mg->Add(gr);
+   TGraph** gRise = (TGraph**) malloc(sizeof(TGraph*) * rising_voltages.size());
+   TGraph** gFall = (TGraph**) malloc(sizeof(TGraph*) * falling_voltages.size());
+   //gRise[0] = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
+   cout << "here = ";
+   Int_t k = 0;
   for (auto& itRow : rising_voltages)
-    {
+    {   gRise[k] = new TGraph((Int_t)(rising_times[k].size()),(rising_times[k].data()),(itRow.data()));
+        gRise[k]->Fit("pol1");
+        gRise[k]->SetMarkerColor(3);
+        cout << "a = " << gRise[k]->GetFunction("pol1")->GetParameter(1) << " b = "<< gRise[k]->GetFunction("pol1")->GetParameter(0) <<endl;
+        mg->Add(gRise[k]);
+        //gRise[k]->Draw("AC*");
         std::cout << "cells = ";
 
         for (auto& itCell : itRow)
@@ -227,9 +243,19 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
             std::cout << itCell << " ";
         }
         std::cout << std::endl;
+        k++;
     }
+     /*TF1 *lin1 = new TF1("lin1","[0]*x+[1]",0,200);
+     lin1->SetParameter(0,gRise[0]->GetFunction("pol1")->GetParameter(1));
+     lin1->SetParameter(1,gRise[0]->GetFunction("pol1")->GetParameter(0));
+     //TF1 *lin2 = new TF1("lin2","[0]*x+[1])",-3,3);
+     TGraph * FuncG = new TGraph(lin1,"");*/
+  mg->Add(FuncG);
+  mg->Draw("A*");
+    mg->GetXaxis()->SetLimits(0,200);
 
-	c1->SaveAs("PWM.png");
+  c2->SaveAs("PWM2test.png");
+
 
 	delete c1;
 	return 0;
