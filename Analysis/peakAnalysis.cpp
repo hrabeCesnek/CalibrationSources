@@ -13,10 +13,25 @@
 using namespace std;
 
 
-#define no_deriv 3
+#define no_deriv 2
 
 
+/*
+class OnePulse {
+public:
+    OnePulse(Float_t Height, Float_t slope, Float_t duration)
+        {
 
+        }
+
+    unsigned int getSize() const
+        { return vec.size(); }
+
+    // ... more things...
+private:
+    vector<int> vec;
+}
+*/
 
 
 
@@ -86,7 +101,7 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
     lineMax->Draw();
 
   const Float_t Down_bound = 0.2* Vmaximum;
-  const Float_t Up_bound = 0.9 * Vmaximum;
+  const Float_t Up_bound = 0.8 * Vmaximum;
 
   cout << "down bound:" <<Down_bound << endl;
   cout << "up bound:" <<Up_bound << endl;
@@ -250,9 +265,9 @@ TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
      lin1->SetParameter(1,gRise[0]->GetFunction("pol1")->GetParameter(0));
      //TF1 *lin2 = new TF1("lin2","[0]*x+[1])",-3,3);
      TGraph * FuncG = new TGraph(lin1,"");*/
-  mg->Add(FuncG);
+  //mg->Add(FuncG);
   mg->Draw("A*");
-    mg->GetXaxis()->SetLimits(0,200);
+    mg->GetXaxis()->SetLimits(20000,20200);
 
   c2->SaveAs("PWM2test.png");
 
