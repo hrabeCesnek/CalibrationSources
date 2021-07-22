@@ -11,7 +11,7 @@
 #include <numeric>
 #include <dirent.h>
 #include <sys/types.h>
-
+#include "singlePulse.h"
 using namespace std;
 
 #define pathToFiles "/home/dannezlomnyj/Documents/Programming/CalibrationSources/ReadCP/linux-build-files/data/"
@@ -55,5 +55,8 @@ for(auto& name : fileNames){
   std::cout << name << '\n';
 
 }
+
+Pulse MyPulses("/home/dannezlomnyj/Documents/Programming/CalibrationSources/ReadCP/linux-build-files/data/1625173205.txt");
+cout << "here it comes:"<<MyPulses.height << endl;
 return 0;
 }
