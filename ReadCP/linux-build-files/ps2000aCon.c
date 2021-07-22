@@ -2543,7 +2543,7 @@ void convertToCharArray(unsigned char *arr, long long a)
 * main
 * 
 ***************************************************************************/
-int32_t main(void)
+int32_t main(int argc, char *argv[])
 {
     /*int8_t ch;
 
@@ -2569,6 +2569,11 @@ int32_t main(void)
 	//unsigned int microsecond = 1000000;
 	//usleep(3 * microsecond);//sleeps for 3 second
 	CloseDevice(&unit);*/
+	/*char* nameType = "n";
+	if(argc != 0){
+	nameType = argv[0];
+	}*/
+	
 	int16_t value = 0;
 
 	int32_t retrievedSamples = 0;
@@ -2661,6 +2666,11 @@ int32_t main(void)
 	unsigned char dates[32];
 	const char* path = "../../AllData/osci_";
 	const char* extension = ".csv";
+	char* divider = "_";
+	char* nameType = "";
+	if(argc > 1){
+	nameType = argv[1];
+	}
 	//printf("%i\n",PS2000A_RANGE);
 	time_t rawtime;
 
@@ -2670,6 +2680,8 @@ int32_t main(void)
 	//    %d.%m.%y_%H:%M:%S"
 
 	strcpy(arr, path);
+	strcat(arr, nameType);
+	strcat(arr, divider);
 	strcat(arr, dates);
 	strcat(arr, extension);
 
