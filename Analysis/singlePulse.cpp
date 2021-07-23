@@ -11,19 +11,33 @@
 #include <iostream>
 #include <fstream>
 #include <numeric>
-
+ #include <TF1Convolution.h>
 
 
 using namespace std;
 
 
-#define no_deriv 2
+#define no_deriv 1
+#define time_step 2
+#define min_slope 0.00005
+#define min_time 20
+#define max_time 110
 
 #include "singlePulse.h"
 //class Pulse {
 //public:
+
+
+
+
+
+
+
     Pulse::Pulse(string fil)
         {
+          TCanvas *canvas_1;
+          TCanvas *canvas_2;
+          std::cout << fil << '\n';
           canvas_1 = new TCanvas("c1","full show", 600,600);
           //FILE *fp = fopen("/home/dannezlomnyj/Documents/Programming/CalibrationSources/ReadCP/linux-build-files/data/1625173205.txt","r");
           ifstream f(fil);
@@ -37,7 +51,7 @@ using namespace std;
         while (getline(f,str))
         {
           sscanf(str.c_str(),"%f %f",&time,&voltage);
-          std::cout << voltage << '\n';
+          //std::cout << voltage << '\n';
           times.push_back(time);
           voltages.push_back((-1)*voltage); //invert back
         }
@@ -58,7 +72,7 @@ using namespace std;
             voltageHistogram_1->Fit("gaus");
 
             Float_t Vminimum = voltageHistogram_1->GetFunction("gaus")->GetParameter(1);
-
+            Float_t min_sigma = voltageHistogram_1->GetFunction("gaus")->GetParameter(2);
               this->lowLevel = Vminimum;
               this->lowLevel_error = voltageHistogram_1->GetFunction("gaus")->GetParError(1) ;
 
@@ -73,14 +87,49 @@ using namespace std;
                 voltageHistogram_2->Fit("gaus");
 
             Float_t Vmaximum = voltageHistogram_2->GetFunction("gaus")->GetParameter(1);
-
+            Float_t max_sigma = voltageHistogram_2->GetFunction("gaus")->GetParameter(2);
             this->height = Vmaximum;
             this->height_error = voltageHistogram_2->GetFunction("gaus")->GetParError(1) ;
 
+            /*
+            for(int j = 0; j < voltages.size(); j++)
+            {
 
-        TGraph* gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
+              /*
+            if(abs (voltages.at(j) - Vmaximum) < 2*max_sigma){
+              voltages.at(j) = Vmaximum;
+            }
+            else if(abs (voltages.at(j) - Vminimum) < 2*min_sigma){
+              voltages.at(j) = Vminimum;
+            }
+          }*/
+
+
+          TGraph* gr;
+          gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
             //voltageHistogram_1->Draw("AC*");
-          gr->Draw("AC*");
+            gr->Draw("A*");
+            //gr->GetXaxis()->SetLimits(0,50);
+            canvas_1->SaveAs("PWM.png");
+
+            /*
+          TF1 *dataFit = new TF1("dataFit",myfunc,(Double_t)times.at(0),(Double_t)times.back());
+          //dataFit->Draw("AC");
+          TF1 *ConGauss = new TF1("ConGauss","[0]*TMath::Gaus(x,[1],[2])",(Double_t)times.at(0),(Double_t)times.back());
+          //ConGauss->SetParameters(0.008,(Double_t)times.at(times.size()/2),4000);
+          ConGauss->SetParameters(0.008,(Double_t)times.at(times.size()/2),400);
+          //ConGauss->Draw("SAME");
+           TF1Convolution *f_conv = new TF1Convolution("gaus","gaus",true);
+           //f_conv->SetRange((Double_t)times.at(0),(Double_t)times.back());
+           f_conv->SetRange(0,1);
+           f_conv->SetNofPointsFFT(1000);
+          TF1 *convoluted = new TF1("convoluted",*f_conv, /Double_t)times.at(0), (Double_t)times.back(), f_conv->GetNpar());
+          convoluted->Draw("AC");
+
+          //gr->Fit("convoluted");
+
+
+          return;*/
 
           TLine *line = new TLine(0,average_voltage,40000,average_voltage);
             line->SetLineColor(kRed);
@@ -94,12 +143,21 @@ using namespace std;
             lineMax->SetLineColor(kRed);
             lineMax->Draw();
 
-          const Float_t Down_bound = 0.2* Vmaximum;
-          const Float_t Up_bound = 0.8 * Vmaximum;
+            for(int j = 0; j < voltages.size(); j++)
+            {
+              voltages.at(j) = voltages.at(j) - Vminimum;
+
+            }
+
+
+
+          const Float_t Down_bound = 0.1* (Vmaximum-Vminimum);
+          const Float_t Up_bound = 0.9 * (Vmaximum-Vminimum);
 
           cout << "down bound:" <<Down_bound << endl;
           cout << "up bound:" <<Up_bound << endl;
 
+          //canvas_1->SaveAs("PWM.png");
           vector<vector<Float_t>> rising_times; //= new vector<int>;
           vector<vector<Float_t>>  rising_voltages;//= new vector<double>;
           vector<vector<Float_t>> falling_times; //= new vector<int>;
@@ -109,12 +167,88 @@ using namespace std;
           vector<Float_t> temp_voltages;
 
 
-          Int_t d_no_pos, d_no_neg;
-          Float_t actual_voltage, actual_voltage_2, old_voltage = 0;
-          Int_t no_rises = 0;
-          for (size_t i = 0; i < times.size() -6; i++)  { //only to 6 before end
-            actual_voltage = voltages.at(i);
-            if(actual_voltage > Down_bound && actual_voltage < Up_bound){
+          //Int_t d_no_pos, d_no_neg;
+          //Float_t actual_voltage, actual_voltage_2, old_voltage = 0;
+          //Int_t no_rises = 0;
+
+          Int_t g_back = 0;
+          Int_t g_up= 0;
+          for (size_t i = 2; i < times.size() -6; i++)  { //from 2 and only to 6 before end
+            //actual_voltage = voltages.at(i);
+            g_back = 0;
+            g_up = 0;
+            if(((voltages.at(i-2) - (8 * voltages.at(i-1)) + (8 * voltages.at(i+1)) - voltages.at(i+2))/(24.0) > 0) && voltages.at(i+1) >= 0.5 *(Vmaximum-Vminimum) && voltages.at(i-1) < 0.5 *(Vmaximum-Vminimum)  ){
+
+              cout << "new positive series" << endl;
+
+              temp_times.clear();
+              temp_voltages.clear();
+              while(voltages.at(i-g_back) > Down_bound && ((i-g_back) > 0)){
+                g_back++;
+              }
+              if((i-g_back) == 0){
+                cout << "bounding problem" << endl;
+                break;
+              }
+              while(voltages.at(i-g_back+g_up) < Up_bound ){
+                g_up++;
+                cout << voltages.at(i-g_back+g_up) << endl;
+                temp_voltages.push_back(voltages.at(i-g_back+g_up));
+                temp_times.push_back(times.at(i-g_back+g_up));
+
+              }
+              if((temp_times.back() - temp_times.at(0) > min_time && (temp_times.back() - temp_times.at(0) < max_time))){
+                rising_times.push_back(temp_times);
+                rising_voltages.push_back(temp_voltages);
+              }
+
+
+
+
+            }
+
+
+
+
+            else if(((voltages.at(i-2) - (8 * voltages.at(i-1)) + (8 * voltages.at(i+1)) - voltages.at(i+2))/(24.0) < 0) && voltages.at(i+1) <= 0.5 *(Vmaximum-Vminimum) && voltages.at(i-1) > 0.5 *(Vmaximum-Vminimum)  ){
+
+              cout << "new negative series" << endl;
+
+              temp_times.clear();
+              temp_voltages.clear();
+
+              while(voltages.at(i-g_back) < Up_bound   && ((i-g_back) > 0)){
+                g_back++;
+              }
+              if((i-g_back) == 0){
+                cout << "bounding problem" << endl;
+                break;
+              }
+
+              while((voltages.at(i-g_back+g_up) > Down_bound)){
+                g_up++;
+                cout << voltages.at(i-g_back+g_up) << endl;
+                temp_voltages.push_back(voltages.at(i-g_back+g_up));
+                temp_times.push_back(times.at(i-g_back+g_up));
+
+              }
+              if((temp_times.back() - temp_times.at(0) > min_time && (temp_times.back() - temp_times.at(0) < max_time))){
+              falling_times.push_back(temp_times);
+              falling_voltages.push_back(temp_voltages);
+              }
+
+
+
+
+
+
+
+            }
+
+            i += (g_up - g_back);
+
+            //----------------------------------------------------------------------old values -----------------------------------------------------------------------------------------------------------
+            /*if(actual_voltage > Down_bound && actual_voltage < Up_bound){
 
 
                               //check for positive derivative
@@ -124,8 +258,10 @@ using namespace std;
 
 
                 actual_voltage_2 = actual_voltage;
-                old_voltage = actual_voltage_2;
-                while((actual_voltage_2 - old_voltage) >= 0){
+                //old_voltage = actual_voltage_2;
+                old_voltage = voltages.at(i-1);
+                //while((actual_voltage_2 - old_voltage) > 0){
+                while((voltages.at(i-2+d_no_pos) - (8 * voltages.at(i-1+d_no_pos)) + (8 * voltages.at(i+1+d_no_pos)) - voltages.at(i+2+d_no_pos))/(24.0) > min_slope){
                   if (!(actual_voltage_2 > Down_bound && actual_voltage_2 < Up_bound)){
                     d_no_pos = 0;
                     break;
@@ -144,8 +280,10 @@ using namespace std;
               d_no_neg = 0;
               if (actual_voltage > (0.5 *Vmaximum)) {
               actual_voltage_2 = actual_voltage;
-              old_voltage = actual_voltage_2;
-              while((actual_voltage_2 - old_voltage) <= 0){
+              //old_voltage = actual_voltage_2;
+              old_voltage = voltages.at(i-1);
+              //while((actual_voltage_2 - old_voltage) < 0){
+              while((voltages.at(i-2+d_no_neg) - (8 * voltages.at(i-1+d_no_neg)) + (8 * voltages.at(i+1+d_no_neg)) - voltages.at(i+2+d_no_neg))/(24.0) < -min_slope){
                 if (!(actual_voltage_2 > Down_bound && actual_voltage_2 < Up_bound)){
                   d_no_neg = 0;
                   break;
@@ -159,6 +297,7 @@ using namespace std;
                 }
               }
             }
+              bool isEdge = true;
               Int_t j = 0;
               if(d_no_pos > no_deriv){
 
@@ -176,10 +315,18 @@ using namespace std;
 
                   j++;
                   actual_voltage_2 = voltages.at(i+j);
+                  if(temp_times.back() - temp_times.at(0) > max_time_fall){
+                    cout << "breaking, this is not a edge" << endl;
+                    isEdge = false;
+                    break;
+                  }
+
+
                 }
+                if(isEdge){
                 rising_times.push_back(temp_times);
                 rising_voltages.push_back(temp_voltages);
-
+              }
               }
 
 
@@ -202,12 +349,18 @@ using namespace std;
 
                 j++;
                 actual_voltage_2 = voltages.at(i+j);
+                if(temp_times.back() - temp_times.at(0) > max_time_rise){
+                  cout << "breaking, this is not a edge" << endl;
+                  isEdge = false;
+                  break;
                 }
+                }
+                if(isEdge){
                 falling_times.push_back(temp_times);
                 falling_voltages.push_back(temp_voltages);
-
-
               }
+
+            }*/
 
               /*if((actual_voltage - old_voltage) > 0 && no_rises < 3){
               no_rises++;
@@ -222,13 +375,13 @@ using namespace std;
 
 
 
-              }*/
-              i += j;
-          }
+              }
+
+          }*/
           }
 
 
-          //canvas_1->SaveAs("PWM.png");
+
           canvas_2 = new TCanvas("c2","fit1", 600,600);
           TMultiGraph *mg = new TMultiGraph();
           //TF1 *f1 = new TF1("f1","[0]*x+[1])");
@@ -236,7 +389,7 @@ using namespace std;
            TGraph** gRise = (TGraph**) malloc(sizeof(TGraph*) * rising_voltages.size());
            TGraph** gFall = (TGraph**) malloc(sizeof(TGraph*) * falling_voltages.size());
            //gRise[0] = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
-           cout << "here = ";
+           //cout << "here = ";
            Int_t k = 0;
           for (auto& itRow : rising_voltages)
             {   gRise[k] = new TGraph((Int_t)(rising_times[k].size()),(rising_times[k].data()),(itRow.data()));
@@ -268,15 +421,24 @@ using namespace std;
           this->slope_error = pow(((0.25)*pow(gRise[0]->GetFunction("pol1")->GetParError(1),2)) + ((0.25)*pow(gRise[1]->GetFunction("pol1")->GetParError(1),2)),0.5);
           this->rise_time = ((rising_times[0].back() - rising_times[0].at(0)) + (rising_times[1].back() - rising_times[1].at(0))) /2 ;
           this->rise_time_error = 0;
+          this->drop_time = ((falling_times[0].back() - falling_times[0].at(0)) + (falling_times[1].back() - falling_times[1].at(0))) /2 ;
+          //this->drop_time = falling_times[0].size() + falling_times[1].size();
+          //this->drop_time_error = 0;
+          //std::cout << "fall"<<rising_times[0].size() << endl;
+          //  std::cout << rising_times[1].size() << endl;
 
-          canvas_2->Print("FirstRise.pdf");
+
+          //this->drop_time = ((falling_times[0].back() - falling_times[0].at(0)) + (falling_times[1].back() - falling_times[1].at(0))) /2 ;
+        //  this->drop_time_error = 0;
+
+          //canvas_2->Print("FirstRise.pdf");
 
 
 
           //canvas_3 = new TCanvas("c3","fit2", 600,600);
           mg->GetXaxis()->SetLimits(rising_times.at(1).at(0) -50,rising_times.at(1).back() +50);
 
-          canvas_2->Print("SecondRise.pdf");
+          //canvas_2->Print("SecondRise.pdf");
 
 
 
@@ -287,11 +449,24 @@ using namespace std;
 
           delete voltageHistogram_1;
           delete voltageHistogram_2;
+          delete canvas_1;
+          delete canvas_2;
+          delete mg;
+          delete line;
+          delete lineMin;
+          delete lineMax;
 
 
+          /*for(int i=0; i<rising_voltages.size()-1; i++){
+            free(gRise[i]);
 
+          }
+            free(gRise);
+          for(int i=0; i<falling_voltages.size()-1; i++){
+            free(gFall[i]);
 
-
+          }
+            free(gFall);*/
 
 
 

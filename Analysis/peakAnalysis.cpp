@@ -16,22 +16,9 @@ using namespace std;
 #define no_deriv 2
 
 
-/*
-class OnePulse {
-public:
-    OnePulse(Float_t Height, Float_t slope, Float_t duration)
-        {
 
-        }
 
-    unsigned int getSize() const
-        { return vec.size(); }
 
-    // ... more things...
-private:
-    vector<int> vec;
-}
-*/
 
 
 
@@ -73,6 +60,8 @@ TH1F *voltageHistogram_1 = new TH1F("voltHist","voltHist",1000,0,average_voltage
 
     Float_t Vminimum = voltageHistogram_1->GetFunction("gaus")->GetParameter(1);
 
+    //cout << voltageHistogram_1->GetFunction("gaus")->GetParError(1) << endl;
+    //return 0;
     TH1F *voltageHistogram_2 = new TH1F("voltHist","voltHist",1000,average_voltage,*max_element(voltages.begin(), voltages.end()));
 
         for(int j = 0; j < voltages.size(); j++) //traca
