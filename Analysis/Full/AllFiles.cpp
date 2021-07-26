@@ -66,7 +66,9 @@ int main(int argc, char *argv[]) {
   vector<Pulse>  pulses;
   vector<double>  Source_voltages;
   vector<double>  PMT_temperature;
+  vector<double>  PMT_temperature_error;
   vector<double>  Power;
+  vector<double>  Power_error;
 
 fileNames = getFiles(pathToFiles);
 cout << "start"<< endl;
@@ -77,8 +79,11 @@ for(auto& name : fileNames){
   std::cout << name << '\n';
   if(name.find("osci_") == 0){
   string name_2 = name;
+  string name_3 = name;
+
   name_2.erase (name_2.end()-4, name_2.end()); //erase .csv
   name_2.erase (name_2.begin(), name_2.begin() + 5); //erase osci_
+  name_3.erase (name_3.begin(), name_3.begin() + 5);
   //std::cout << name_2 << '\n';
   std::tm t = {};
   std::istringstream ss(name_2);
@@ -90,7 +95,11 @@ for(auto& name : fileNames){
   }
   //std::cout << (Float_t)(timestamp) << '\n';
   pulses.emplace_back(pathToFiles+name);
+  pulses.back().SetConditions(pathToFiles+string("read_")+name_3);
+  //pulses.back().SetConditions(pathToFiles+string("read_20210712_0800.csv"));
+
   timestamps.push_back(difftime(timestamp,first_Time));
+  //return 0;
 }
 
 
@@ -116,6 +125,15 @@ for(auto& a : pulses){
   slopes_errors.push_back(a.slope_error);
   std::cout << a.drop_time << '\n';
   drop_times.push_back(a.drop_time);
+
+  std::cout << a.PMT_temperature << '\n';
+  PMT_temperature.push_back(a.PMT_temperature);
+  std::cout << a.PMT_temperature_error << '\n';
+  PMT_temperature_error.push_back(a.PMT_temperature_error);
+  std::cout << a.power << '\n';
+  Power.push_back(a.power);
+  std::cout << a.power_error << '\n';
+  Power_error.push_back(a.power_error);
 
 }
 /*for(auto& a : pulses){
@@ -163,6 +181,23 @@ dg->SetMarkerColor(4);
 dg->SetMarkerStyle(21);
 dg->Draw("A*");
 c1->SaveAs("drop.png");
+
+
+auto tem = new TGraphErrors((Int_t)PMT_temperature.size(),timestamps.data(),PMT_temperature.data(),0,PMT_temperature_error.data());
+
+tem->SetTitle("temperatures");
+tem->SetMarkerColor(4);
+tem->SetMarkerStyle(21);
+tem->Draw("A*");
+c1->SaveAs("temperatures.png");
+
+auto pow = new TGraphErrors((Int_t)Power.size(),timestamps.data(),Power.data(),0,Power_error.data());
+
+pow->SetTitle("power");
+pow->SetMarkerColor(4);
+pow->SetMarkerStyle(21);
+pow->Draw("A*");
+c1->SaveAs("powers.png");
 /*Pulse MyPulses("/home/dannezlomnyj/Documents/Programming/CalibrationSources/ReadCP/linux-build-files/data/1625162405.txt");
 cout << "here it comes:"<<MyPulses.height << endl;
 cout << "here it comes:"<<MyPulses.height_error << endl;

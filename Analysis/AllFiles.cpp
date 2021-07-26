@@ -58,7 +58,7 @@ fileNames = getFiles(pathToFiles);
 
 for(string name : fileNames){
   string name_2 = name;
-  name_2.erase (name_2.begin()-4, name_2.end());
+  name_2.erase (name_2.end()-4, name_2.end());
   std::cout << name << '\n';
   pulses.emplace_back(pathToFiles+name);
   timestamps.push_back((Float_t)stof(name_2));

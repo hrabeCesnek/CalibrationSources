@@ -26,23 +26,54 @@ using namespace std;
 #include "singlePulse.h"
 //class Pulse {
 //public:
+double getError(vector<double> data){
+
+double m =accumulate( data.begin(), data.end(), 0.0)/data.size();
+double accum = 0;
+  for (double d : data) {
+    accum += (d - m) * (d - m);
+  }
+double error = sqrt(accum/(data.size() * (data.size()-1)));
+return error;
+}
 
 
 
+  void Pulse::SetConditions(string fil){
 
-  Pulse::SetConditions(string fl){
-
+    std::vector<double> temperatures; //= new vector<int>;
+    //std::vector<double>  Source_voltage;
+    std::vector<double> powers;
+    string str = "nic";
+    double temperature = -300;
+    double power = -300;
+    cout << fil << '\n';
     ifstream f(fil);
-    etline(f,str);//skip firs
+
+    getline(f,str);//skip first 4
+    getline(f,str);
+    getline(f,str);
+    getline(f,str);
     while (getline(f,str))
     {
-      sscanf(str.c_str(),"%f,\t %f",&time,&voltage);
-      //std::cout << voltage << '\n';
-      times.push_back(time);
-      voltages.push_back((-1)*voltage); //invert back
+      cout << str << endl;
+      str.erase(str.begin(), str.begin() + 21);
+      //sscanf(str.c_str(),"%*i/%*i/%*i %*i:%*i:%*i,\t %lf,\t %lf,\t %*f",&power,&temperature);
+      sscanf(str.c_str(),"%lf,\t %lf,\t %*f",&power,&temperature);
+      std::cout << temperature << '\n';
+      std::cout << power << '\n';
+      temperatures.push_back(temperature);
+      powers.push_back(power); //invert back
+
     }
 
+    this->power = accumulate( powers.begin(), powers.end(), 0.0)/powers.size();
 
+    this->PMT_temperature = accumulate( temperatures.begin(), temperatures.end(), 0.0)/temperatures.size();
+
+    this->power_error = getError(powers);
+
+    this->PMT_temperature_error = getError(temperatures);
   }
 
 
@@ -124,9 +155,9 @@ using namespace std;
             //voltageHistogram_1->Draw("AC*");
             gr->Draw("A*");
             //gr->GetXaxis()->SetLimits(0,10000);
-            fil2 = fil;
+/*------------            fil2 = fil;
             fil2.erase (fil2.end()-4, fil2.end());
-            canvas_1->SaveAs("../simplePulses/" + fil2 +".png");
+            canvas_1->SaveAs("../simplePulses/" + fil2 +".png");*/
 
             /*
           TF1 *dataFit = new TF1("dataFit",myfunc,(Double_t)times.at(0),(Double_t)times.back());
