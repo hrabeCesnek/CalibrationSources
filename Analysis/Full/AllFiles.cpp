@@ -22,9 +22,12 @@
 
 using namespace std;
 
+
+#define prequels "osci_"
 #define pathToFiles "/home/dannezlomnyj/Dropbox/Bakalarka/MeasuredData/SourceCalibration/"
-
-
+//#define pathToFiles "/home/dannezlomnyj/Dropbox/Bakalarka/MeasuredData/SourceCalibration/to267/"
+//#define pathToResult "./to267/"
+#define pathToResult "./"
 
 
 
@@ -69,6 +72,8 @@ int main(int argc, char *argv[]) {
   vector<double>  PMT_temperature_error;
   vector<double>  Power;
   vector<double>  Power_error;
+  vector<double> lowLevels;
+  vector<double> lowLevels_error;
 
 fileNames = getFiles(pathToFiles);
 cout << "start"<< endl;
@@ -77,7 +82,7 @@ bool set = false;
 //cout << fileNames.size()<< endl;
 for(auto& name : fileNames){
   std::cout << name << '\n';
-  if(name.find("osci_") == 0){
+  if(name.find(prequels) == 0 && name.find("osci_Cal1_") != 0 && name.find("osci_Cal2_") != 0){
   string name_2 = name;
   string name_3 = name;
 
@@ -135,6 +140,11 @@ for(auto& a : pulses){
   std::cout << a.power_error << '\n';
   Power_error.push_back(a.power_error);
 
+  std::cout << a.lowLevel << '\n';
+  lowLevels.push_back(a.lowLevel);
+  std::cout << a.lowLevel_error << '\n';
+  lowLevels_error.push_back(a.lowLevel_error);
+
 }
 /*for(auto& a : pulses){
   std::cout << a.height << '\n';
@@ -147,6 +157,25 @@ for(auto& a : pulses){
 
 
 }*/
+//const std::string height_string = pathToResult + string("Height.png");
+
+
+char height_string [100];
+char slope_string [100];
+char rise_string [100];
+char drop_string [100];
+char temperatures_string [100];
+char powers_string [100];
+char lowLevel_string [100];
+//string height_string_s = (pathToResult + string("Height.png"));
+strcpy(height_string, (pathToResult + string("Height.png")).c_str()); //+ ("Height.png");
+//cout << "before" << endl;
+strcpy(slope_string, (pathToResult + string("Slope.png")).c_str());
+strcpy(rise_string, (pathToResult + string("rise.png")).c_str());
+strcpy(drop_string, (pathToResult + string("drop.png")).c_str());
+strcpy(temperatures_string, (pathToResult + string("temperatures.png")).c_str());
+strcpy(powers_string, (pathToResult + string("powers.png")).c_str());
+strcpy(lowLevel_string, (pathToResult + string("lowLevel.png")).c_str());
 
 auto c1 = new TCanvas("c1","Height of pulses",200,10,700,500);
 
@@ -156,7 +185,9 @@ hg->SetMarkerColor(4);
 hg->SetMarkerStyle(21);
 hg->Draw("A*");
 
-c1->SaveAs("Height.png");
+
+
+c1->SaveAs(height_string);
 
 auto sg = new TGraphErrors((Int_t)slopes.size(),timestamps.data(),slopes.data(),0,slopes_errors.data());
 
@@ -164,7 +195,7 @@ sg->SetTitle("slopes");
 sg->SetMarkerColor(4);
 sg->SetMarkerStyle(21);
 sg->Draw("A*");
-c1->SaveAs("Slope.png");
+c1->SaveAs(slope_string);
 
 auto rg = new TGraphErrors((Int_t)rise_times.size(),timestamps.data(),rise_times.data(),0,0);
 
@@ -172,7 +203,7 @@ rg->SetTitle("rise times");
 rg->SetMarkerColor(4);
 rg->SetMarkerStyle(21);
 rg->Draw("A*");
-c1->SaveAs("rise.png");
+c1->SaveAs(rise_string);
 
 auto dg = new TGraphErrors((Int_t)drop_times.size(),timestamps.data(),drop_times.data(),0,0);
 
@@ -180,7 +211,7 @@ dg->SetTitle("drop times");
 dg->SetMarkerColor(4);
 dg->SetMarkerStyle(21);
 dg->Draw("A*");
-c1->SaveAs("drop.png");
+c1->SaveAs(drop_string);
 
 
 auto tem = new TGraphErrors((Int_t)PMT_temperature.size(),timestamps.data(),PMT_temperature.data(),0,PMT_temperature_error.data());
@@ -189,7 +220,7 @@ tem->SetTitle("temperatures");
 tem->SetMarkerColor(4);
 tem->SetMarkerStyle(21);
 tem->Draw("A*");
-c1->SaveAs("temperatures.png");
+c1->SaveAs(temperatures_string);
 
 auto pow = new TGraphErrors((Int_t)Power.size(),timestamps.data(),Power.data(),0,Power_error.data());
 
@@ -197,7 +228,15 @@ pow->SetTitle("power");
 pow->SetMarkerColor(4);
 pow->SetMarkerStyle(21);
 pow->Draw("A*");
-c1->SaveAs("powers.png");
+c1->SaveAs(powers_string);
+
+auto ll = new TGraphErrors((Int_t)lowLevels.size(),timestamps.data(),lowLevels.data(),0,lowLevels_error.data());
+
+ll->SetTitle("low level");
+ll->SetMarkerColor(4);
+ll->SetMarkerStyle(21);
+ll->Draw("A*");
+c1->SaveAs(lowLevel_string);
 /*Pulse MyPulses("/home/dannezlomnyj/Documents/Programming/CalibrationSources/ReadCP/linux-build-files/data/1625162405.txt");
 cout << "here it comes:"<<MyPulses.height << endl;
 cout << "here it comes:"<<MyPulses.height_error << endl;
