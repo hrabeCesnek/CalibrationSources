@@ -26,11 +26,61 @@ using namespace std;
 #include "singlePulse.h"
 //class Pulse {
 //public:
+double getError(vector<double> data){
+
+double m =accumulate( data.begin(), data.end(), 0.0)/data.size();
+double accum = 0;
+  for (double d : data) {
+    accum += (d - m) * (d - m);
+  }
+double error = sqrt(accum/(data.size() * (data.size()-1)));
+return error;
+}
 
 
 
+  void Pulse::SetConditions(string fil){
 
+    std::vector<double> temperatures; //= new vector<int>;
+    std::vector<double>  Source_voltages;
+    std::vector<double> powers;
+    string str = "nic";
+    double temperature = -300;
+    double power = -300;
+    double Source_voltage = -300;
+    cout << fil << '\n';
+    ifstream f(fil);
 
+    getline(f,str);//skip first 4
+    getline(f,str);
+    getline(f,str);
+    getline(f,str);
+    while (getline(f,str))
+    {
+      cout << str << endl;
+      str.erase(str.begin(), str.begin() + 21);
+      //sscanf(str.c_str(),"%*i/%*i/%*i %*i:%*i:%*i,\t %lf,\t %lf,\t %*f",&power,&temperature);
+      sscanf(str.c_str(),"%lf,\t %lf,\t %*f,\t %lf",&power,&temperature,&Source_voltage);
+      std::cout << temperature << '\n';
+      std::cout << power << '\n';
+      temperatures.push_back(temperature);
+      powers.push_back(power); //invert back
+      Source_voltages.push_back(Source_voltage);
+
+    }
+
+    this->power = accumulate( powers.begin(), powers.end(), 0.0)/powers.size();
+
+    this->PMT_temperature = accumulate( temperatures.begin(), temperatures.end(), 0.0)/temperatures.size();
+
+    this->power_error = getError(powers);
+
+    this->PMT_temperature_error = getError(temperatures);
+
+    this->Source_voltage = accumulate( Source_voltages.begin(), Source_voltages.end(), 0.0)/Source_voltages.size();
+
+    this->Source_voltage_error = getError(Source_voltages);
+  }
 
 
     Pulse::Pulse(string fil)
@@ -48,9 +98,10 @@ using namespace std;
         Float_t voltage;
         std::vector<Float_t> times; //= new vector<int>;
         std::vector<Float_t>  voltages;//= new vector<double>;
+        getline(f,str);//skip firs
         while (getline(f,str))
         {
-          sscanf(str.c_str(),"%f %f",&time,&voltage);
+          sscanf(str.c_str(),"%f,\t %f",&time,&voltage);
           //std::cout << voltage << '\n';
           times.push_back(time);
           voltages.push_back((-1)*voltage); //invert back
@@ -109,8 +160,10 @@ using namespace std;
           gr = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
             //voltageHistogram_1->Draw("AC*");
             gr->Draw("A*");
-            //gr->GetXaxis()->SetLimits(0,50);
-            canvas_1->SaveAs("PWM.png");
+            //gr->GetXaxis()->SetLimits(0,10000);
+/*------------            fil2 = fil;
+            fil2.erase (fil2.end()-4, fil2.end());
+            canvas_1->SaveAs("../simplePulses/" + fil2 +".png");*/
 
             /*
           TF1 *dataFit = new TF1("dataFit",myfunc,(Double_t)times.at(0),(Double_t)times.back());
@@ -188,7 +241,10 @@ using namespace std;
               }
               if((i-g_back) == 0){
                 cout << "bounding problem" << endl;
-                break;
+                //g_back = 0;
+                //g_up = 1;
+                i += 1;
+                continue;
               }
               while(voltages.at(i-g_back+g_up) < Up_bound ){
                 g_up++;
@@ -222,7 +278,10 @@ using namespace std;
               }
               if((i-g_back) == 0){
                 cout << "bounding problem" << endl;
-                break;
+                //g_back = 0;
+                //g_up = 1;
+                i += 1;
+                continue;
               }
 
               while((voltages.at(i-g_back+g_up) > Down_bound)){
@@ -389,7 +448,7 @@ using namespace std;
            TGraph** gRise = (TGraph**) malloc(sizeof(TGraph*) * rising_voltages.size());
            TGraph** gFall = (TGraph**) malloc(sizeof(TGraph*) * falling_voltages.size());
            //gRise[0] = new TGraph((Int_t)(times.size()),(times.data()),(voltages.data()));
-           //cout << "here = ";
+           cout << "here = ";
            Int_t k = 0;
           for (auto& itRow : rising_voltages)
             {   gRise[k] = new TGraph((Int_t)(rising_times[k].size()),(rising_times[k].data()),(itRow.data()));
