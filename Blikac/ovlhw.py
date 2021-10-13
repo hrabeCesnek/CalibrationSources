@@ -41,17 +41,19 @@ adc = pyb.ADC(pyb.Pin.board.X19)    # create an ADC on pin X19
 tim = pyb.Timer(6, freq=10)         # create a timer running at 10Hz
 samples = bytearray(100)                # creat a buffer to store the samples
 powerConst = 0.1
-measPower = powerConst * holdPower
+#measPower = powerConst * holdPower
 #-----------------------------------------------------------------------------------
 
 
 
-def proud(hodnota=0):
+def proud(hodnota=0): #predelat, bude se nastavovat vykon
     """
     nastaveni proudu led v mA 0.0-20.0
     """
     dacproud.write(int(hodnota/prevod))
-
+#---------------------zpetna vazba--------------------------------------------------
+    holdPower = hodnota 
+#-----------------------------------------------------------------------------------
 def perioda(hodnota=1000):
     """
     perioda casovace v ms
@@ -72,7 +74,7 @@ def teplotaC():
 
 pid = uPID.PID(0.5, 0, 0, setpoint=4000 , sample_time=0.1, output_limits=(0,100))
 
-PowerPid = uPID.PID(0.5, 0, 0, setpoint=setPower , sample_time=0.1, output_limits=(0,4096))
+PowerPid = uPID.PID(0.5, 0, 0, setpoint=(powerConst*holdCurrent) , sample_time=0.1, output_limits=(0,4096))
 
 def regulator(_):
     kanal2.pulse_width_percent(pid(teplota.read()))
@@ -87,6 +89,6 @@ regtim.callback(lambda t:micropython.schedule(regulator,1))
 def samplePulse():
     adc.read_timed(buf, tim)
     MeasPower = sum(buf)/len(buf)
-    dacproud.write(PowerPid(MeasPower)/powerConst)
+    dacproud.write(PowerPid((MeasPower)/powerConst))
     
 #-----------------------------------------------------------------------------------
